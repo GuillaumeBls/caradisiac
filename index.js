@@ -6,6 +6,7 @@ const {
 } = require('node-car-api');
 
 var client = require('./connection.js');
+var express = require('express');
 
 var voiture = new Array();
 
@@ -39,7 +40,7 @@ async function store() {
 
 }
 
-store();
+//store();
 
 // Document add
 function insertData(index, voiture) {
@@ -67,11 +68,12 @@ function deleteData(index, voiture) {
 
 // Search data
 
-function search() {
+function search(callback) {
   client.search({
     index: 'caradisiac',
     type: 'voiture',
     body: { //Retirer pour tout voir
+      "from" : 0, "size" : 100,
       query: {
         //match: { "brand": "RENAULT" }
         "range": {
@@ -89,8 +91,33 @@ function search() {
       console.log(response);
       console.log("--- Hits ---");
       response.hits.hits.forEach(function (hit) {
+        //return(hit);
         console.log(hit);
+        callback(hit);
       })
     }
   });
 }
+
+//search();
+
+
+//Import data in web pages
+
+
+var app = express();
+
+
+app.get('/suv', function(req, res) {
+    res.setHeader('Content-Type', 'text/plain');
+    search(function (voiture){
+      res.write(JSON.stringify(voiture));
+    });
+    
+});
+
+app.get('/populate', function(req,res){
+  store();
+})
+
+app.listen(9292);
